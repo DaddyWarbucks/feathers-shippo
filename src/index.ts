@@ -1,13 +1,46 @@
-const {
-  GeneralError,
-  MethodNotAllowed,
-  TooManyRequests
-} = require('@feathersjs/errors');
-const Bottleneck = require('bottleneck');
-const shippo = require('shippo');
+import { GeneralError, MethodNotAllowed } from '@feathersjs/errors';
+import Bottleneck from 'bottleneck';
+import shippo from 'shippo';
+import { Application } from '@feathersjs/feathers';
+
+interface ServiceOptions {
+  shippoKey: string;
+  resource: string;
+  limiters?: false | {
+    create: any
+    update: any
+    get: any
+    find: any
+  },
+};
+
+type ID = string;
+
+interface Data { [key: string]: any; }[];
+
+interface Params {
+  [key: string]: any;
+  query: {
+    [key: string]: any;
+    results?: number | undefined;
+    page?: number | undefined;
+  }
+}
+
+interface PaginatedResult {
+  count: `${number}`;
+  next: string | null;
+  previous: string | null;
+  data: [];
+};
+
+interface Result {
+  [key: string]: any;
+};
+
 
 // https://goshippo.com/docs/rate-limits/
-const calcMinTime = (perMinute) => 60000 / perMinute;
+const calcMinTime = (perMinute: number) => 60000 / perMinute;
 
 const minTimes = {
   test: {
@@ -50,9 +83,9 @@ const minTimes = {
       find: calcMinTime(500)
     }
   }
-};
+} as any;
 
-const shippoLimiter = (mode, resource, method) => {
+const shippoLimiter = (mode: string, resource: string, method: string) => {
   resource = ['batch', 'track'].includes(resource) ? resource : 'default';
   const minTime = minTimes[mode][resource][method];
   const limiter = new Bottleneck({ minTime });
@@ -67,13 +100,18 @@ const shippoLimiter = (mode, resource, method) => {
   return limiter;
 };
 
-const objectHas = (object, key) => {
+const objectHas = (object: object, key: string) => {
   return Object.prototype.hasOwnProperty.call(object, key);
 };
 
-class ShippoService {
-  constructor(options, app) {
-    this.options = options || {};
+export class ShippoService {
+  options: ServiceOptions;
+  app: Application;
+  shippoClient: any;
+  resource: any;
+
+  constructor(options: ServiceOptions, app: Application) {
+    this.options = options;
     this.app = app;
 
     const { shippoKey, resource } = options;
@@ -104,130 +142,135 @@ class ShippoService {
     }
   }
 
-  _handleError(error) {
+  _handleError(error: any) {
+    return error;
     // TODO: Inspect the error and throw more specific
     // feathers errors.
-    if (error.code === 429) {
-      throw new TooManyRequests(error);
-    }
-    throw new GeneralError(error);
+    // if (error.code === 429) {
+    //   throw new TooManyRequests(error);
+    // }
+    // throw new BadRequest(error);
   }
 
-  _schedule(method, fn) {
+  schedule(method: 'create' | 'update' | 'get' | 'find', fn: Function) {
     if (this.options.limiters && this.options.limiters[method]) {
       return this.options.limiters[method].schedule(fn);
     }
     return fn();
   }
 
-  _create(data, params) {
+  _create(data: Data, params?: Params): Promise<Result> {
     if (!this.resource.operations.includes('create')) {
       throw new MethodNotAllowed();
     }
-    return this._schedule('create', () =>
+    return this.schedule('create', () =>
       this.resource.create(data).catch(this._handleError)
     );
   }
 
-  create(data, params) {
+  create(data: Data, params?: Params): Promise<Result> {
     return this._create(data, params);
   }
 
-  _get(id, params) {
+  _get(id: ID, params?: Params): Promise<Result> {
     if (!this.resource.operations.includes('retrieve')) {
       throw new MethodNotAllowed();
     }
-    return this._schedule('get', () =>
+    return this.schedule('get', () =>
       this.resource.retrieve(id).catch(this._handleError)
     );
   }
 
-  get(id, params) {
+  get(id: ID, params?: Params): Promise<Result> {
     return this._get(id, params);
   }
 
-  _find(params) {
+  _find(params?: Params): Promise<PaginatedResult> {
     if (!this.resource.operations.includes('list')) {
       throw new MethodNotAllowed();
     }
-    const find = async (params) => {
-      const result = await this.resource.list(params.query);
+    const find = async (params?: Params) => {
+      const result = await this.resource.list(params?.query);
       result.data = result.results;
       delete result.results;
       return result;
     };
-    return this._schedule('find', () => find(params).catch(this._handleError));
+    return this.schedule('find', () => find(params).catch(this._handleError));
   }
 
-  find(params) {
+  find(params?: Params): Promise<PaginatedResult> {
     return this._find(params);
   }
 
-  _update(id, data, params) {
+  _update(id: ID, data: Data, params?: Params): Promise<Result> {
     if (!this.resource.operations.includes('update')) {
       throw new MethodNotAllowed();
     }
-    return this._schedule('update', () =>
+    return this.schedule('update', () =>
       this.resource.update(id, data).catch(this._handleError)
     );
   }
 
-  update(id, data, params) {
+  update(id: ID, data: Data, params?: Params): Promise<Result> {
     return this._update(id, data, params);
   }
 }
 
-class ShippoBatchService extends ShippoService {
-  constructor(options, app) {
+export class ShippoBatchService extends ShippoService {
+  constructor(options: ServiceOptions, app: Application) {
+    options = { ...options, resource: 'batch' };
     super(options, app);
   }
 
-  // get() {
-
+  // get(id: string: ID, params?: Params) {
+  //   const query = params.query || {};
+  //   const args = [id];
+  //   args.push(query.page);
+  //   args.push(query.object_results);
+  //   return this._schedule('get', () => {
+  //     this.resource.retrieve(args).catch(this._handleError);
+  //   });
   // }
 
-  addShipments(id, data) {
-    return this._schedule('create', () =>
+  addShipments(id: ID, data: Data): Promise<Result> {
+    return this.schedule('create', () =>
       this.resource.add(id, data).catch(this._handleError)
     );
   }
 
-  removeShipments(id, data) {
-    return this._schedule('create', () =>
+  removeShipments(id: ID, data: Data): Promise<Result> {
+    return this.schedule('create', () =>
       this.resource.remove(id, data).catch(this._handleError)
     );
   }
 
-  purchase(id) {
-    return this._schedule('create', () =>
+  purchase(id: ID): Promise<Result> {
+    return this.schedule('create', () =>
       this.resource.purchase(id).catch(this._handleError)
     );
   }
 }
 
 class ShippoTrackService extends ShippoService {
-  constructor(options, app) {
+  constructor(options: ServiceOptions, app: Application) {
     super(options, app);
   }
 
-  addShipments(id, data) {
-    return this._schedule('create', () =>
-      this.resource.add(id, data).catch(this._handleError)
-    );
-  }
+  // addShipments(id, data) {
+  //   return this._schedule('create', () =>
+  //     this.resource.add(id, data).catch(this._handleError)
+  //   );
+  // }
 
-  removeShipments(id, data) {
-    return this._schedule('create', () =>
-      this.resource.remove(id, data).catch(this._handleError)
-    );
-  }
+  // removeShipments(id, data) {
+  //   return this._schedule('create', () =>
+  //     this.resource.remove(id, data).catch(this._handleError)
+  //   );
+  // }
 
-  purchase(id) {
-    return this._schedule('create', () =>
-      this.resource.purchase(id).catch(this._handleError)
-    );
-  }
+  // purchase(id) {
+  //   return this._schedule('create', () =>
+  //     this.resource.purchase(id).catch(this._handleError)
+  //   );
+  // }
 }
-
-module.exports.ShippoService = ShippoService;
-module.exports.ShippoBatchService = ShippoBatchService;
