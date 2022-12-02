@@ -1,0 +1,30 @@
+{
+  "name": "feathers-shippo",
+  "version": "0.0.1",
+  "description": "A Feathers JS adapter for the Shippo API",
+  "main": "src/index.js",
+  "repository": "https://github.com/DaddyWarbucks/feathers-shippo.git",
+  "scripts": {
+    "lint": "eslint src test",
+    "style": "prettier **/{.*,*}.md",
+    "fixcode": "yarn run lint -- --fix && yarn run style -- --write",
+    "mocha": "mocha -r dotenv/config test --recursive --exit",
+    "mocha:watch": "mocha -r dotenv/config test --recursive --watch test/*.test.js",
+    "deps:check": "npx depcheck",
+    "deps:outdated": "yarn outdated"
+  },
+  "author": "DaddyWarbucks",
+  "license": "MIT",
+  "dependencies": {
+    "@feathersjs/errors": "^4.5.15",
+    "bottleneck": "^2.19.5",
+    "node-fetch": "^3.3.0",
+    "shippo": "^1.7.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.0"
+  }
+}
