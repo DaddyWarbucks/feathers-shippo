@@ -18,7 +18,7 @@
     "deps:check": "npx depcheck",
     "deps:outdated": "yarn outdated",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
-    "prepublish": "yarn build"
+    "prepublish": "rimraf ./dist && yarn build"
   },
   "author": "DaddyWarbucks",
   "license": "MIT",
