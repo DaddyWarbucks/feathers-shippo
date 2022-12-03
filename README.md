@@ -86,7 +86,7 @@ app.use('shipments', new ShippoService(options, app));
 ```
 
 ## Shippo Client
-The `shippo` function creates a new `axios` instance with the Shippo API base path and authorization header. It is used under the hood for all service requests. It is exported for you to handle any Shippo functionality not covered by this library. This client does not handle rate limiting.
+The `shippo` function creates a new `axios` instance with the Shippo API `baseURL` and `Authorization` header. It is used under the hood for all service requests. It is exported for you to handle any Shippo functionality not covered by this library. This client does not handle rate limiting.
 ```js
 import { shippo } from 'feathers-shippo';
 

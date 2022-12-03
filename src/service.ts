@@ -52,9 +52,6 @@ export interface Params {
     results?: number | undefined;
     page?: number | undefined;
   };
-  shippo?: {
-    [key: string]: any;
-  };
 }
 
 export interface PaginatedResult {
@@ -146,8 +143,7 @@ export const shippoLimiters = (token: string) => {
 
 export const axiosOpts = (params?: Params) => {
   return {
-    params: params?.query,
-    ...params?.shippo
+    params: params?.query
   };
 };
 
