@@ -4,10 +4,19 @@
     "node": true,
     "mocha": true
   },
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2018
+    "ecmaVersion": 2018,
+    "sourceType": "module"
   },
-  "extends": ["eslint:recommended", "plugin:prettier/recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "rules": {
     "prettier/prettier": [
       "error",
@@ -16,13 +25,9 @@
         "singleQuote": true
       }
     ],
-    "no-unused-vars": [
-      "warn",
-      {
-        "argsIgnorePattern": "params"
-      }
-    ],
     "no-console": ["warn"],
-    "no-empty": ["off"]
+    "no-empty": ["off"],
+    "no-unused-vars": ["off"],
+    "@typescript-eslint/no-explicit-any": ["off"]
   }
 }

@@ -2,33 +2,35 @@
   "name": "feathers-shippo",
   "version": "0.0.1",
   "description": "A Feathers JS adapter for the Shippo API",
-  "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
+  "keywords": ["Feathers", "FeathersJS", "Shippo"],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "lib/"
+    "dist/"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/DaddyWarbucks/feathers-shippo"
   },
   "scripts": {
-    "lint": "eslint src test",
-    "style": "prettier **/{.*,*}.md",
-    "fixcode": "yarn run lint -- --fix && yarn run style -- --write",
+    "lint": "eslint src --fix",
     "deps:check": "npx depcheck",
     "deps:outdated": "yarn outdated",
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+    "prepublish": "yarn build"
   },
   "author": "DaddyWarbucks",
   "license": "MIT",
   "dependencies": {
     "@feathersjs/errors": "^4.5.15",
     "@feathersjs/feathers": "^4.5.15",
-    "bottleneck": "^2.19.5",
-    "shippo": "^1.7.1"
+    "axios": "^1.2.0",
+    "bottleneck": "^2.19.5"
   },
   "devDependencies": {
-    "@types/shippo": "^1.7.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
     "eslint": "^8.28.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
