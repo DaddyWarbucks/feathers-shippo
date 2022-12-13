@@ -3,13 +3,13 @@
 A FeathersJS adapter for the [Shippo](https://goshippo.com) API. For more information, visit the [Shippo API Docs](https://goshippo.com/docs/intro) and [Shippo API Reference](https://goshippo.com/docs/reference). This library automatically handles rate limits by using `bottleneck` under the hood.
 
 ```js
-import { ShippoShipmentsService } from 'feathers-shippo';
+import { ShippoShipments } from 'feathers-shippo';
 
 const options = {
   token: 'YOUR_SHIPPO_TOKEN'
 }
 
-app.use('shipments', new ShippoShipmentsService(options, app));
+app.use('shipments', new ShippoShipments(options, app));
 
 
 const shipments = await app.service('shipments').find({
@@ -45,9 +45,9 @@ The library also exports some utility functions and classes
 - shippo
 
 ## Rate Limits
-All services adhere to Shippo's test/live rate limits. The limits are determined by the `options.token`. You can also disable or pass your own rate limiters.
+All services use [Bottleneck](https://www.npmjs.com/package/bottleneck) to queue requests to the Shippo API. The limits are determined by whether the `options.token` starts with `shippo_live` or `shippo_test` and correspond to the [Shippo Rate Limits](https://goshippo.com/docs/rate-limits/). This means that requests should never exceed the rate limit because the `Bottleneck` will ensure they are limited properly. Note `Bottleneck` is a queue, not a rate limiter. You can also disable or pass your own rate limiters.
 ```js
-import { ShippoShipmentsService } from 'feathers-shippo';
+import { ShippoShipments } from 'feathers-shippo';
 import Bottleneck from 'bottleneck';
 
  // disable rate limiting

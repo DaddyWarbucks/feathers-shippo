@@ -27,7 +27,7 @@ export interface ServiceOptions {
   token: string;
   path: string;
   methods: Array<ServiceMethod>;
-  limiters?: false | Limiters;
+  limiters?: null | false | Limiters;
 }
 
 export type ServiceMethod =
@@ -49,8 +49,8 @@ export interface Params {
   [key: string]: any;
   query?: {
     [key: string]: any;
-    results?: number | undefined;
-    page?: number | undefined;
+    results?: number;
+    page?: number;
   };
 }
 
@@ -73,7 +73,7 @@ const liveMinTimes = {
   update: calcMinTime(500),
   get: calcMinTime(4000),
   find: calcMinTime(50),
-  remove: calcMinTime(500)
+  remove: calcMinTime(500) // Note most services don't actually have remove
 };
 
 const testMinTimes = {
@@ -81,39 +81,8 @@ const testMinTimes = {
   update: calcMinTime(50),
   get: calcMinTime(400),
   find: calcMinTime(5),
-  remove: calcMinTime(50)
+  remove: calcMinTime(50) // Note most services don't actually have remove
 };
-
-// const minTimes = {
-//   test: {
-//     batch: {
-//       post: calcMinTime(5),
-//       put: calcMinTime(5),
-//       retrieve: calcMinTime(40),
-//       list: calcMinTime(5)
-//     },
-//     track: {
-//       post: calcMinTime(50),
-//       put: calcMinTime(50),
-//       retrieve: calcMinTime(50),
-//       list: calcMinTime(50)
-//     }
-//   },
-//   live: {
-//     batch: {
-//       post: calcMinTime(50),
-//       put: calcMinTime(50),
-//       retrieve: calcMinTime(400),
-//       list: calcMinTime(50)
-//     },
-//     track: {
-//       post: calcMinTime(500),
-//       put: calcMinTime(500),
-//       retrieve: calcMinTime(500),
-//       list: calcMinTime(500)
-//     }
-//   }
-// } as any;
 
 export const shippoLimiter = (method: ServiceMethod, minTimes: any) => {
   const limiter = new Bottleneck({ minTime: (minTimes as any)[method] });
@@ -129,6 +98,11 @@ export const shippoLimiter = (method: ServiceMethod, minTimes: any) => {
 };
 
 export const shippoLimiters = (token: string) => {
+  if (!token) {
+    throw new errors.GeneralError(
+      'options.token is required a Shippo API Token for new ShippoService()'
+    );
+  }
   const minTimes = token.startsWith('shippo_live')
     ? liveMinTimes
     : testMinTimes;
