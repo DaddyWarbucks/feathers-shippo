@@ -37,10 +37,13 @@ export class ShippoRates extends ShippoService {
     delete shippoParams.query.shipment;
     delete shippoParams.query.rates;
     return this.schedule('get', () => {
-      return this.shippo.get(
-        `shipments/${params?.query?.shipment}/rates/${params?.query?.rates}`,
-        axiosOpts(shippoParams)
-      );
+      return this.shippo
+        .get(
+          `shipments/${params?.query?.shipment}/rates/${params?.query?.rates}`,
+          axiosOpts(shippoParams)
+        )
+        .then(this.handleResult)
+        .catch(this.handleError);
     });
   }
 }
