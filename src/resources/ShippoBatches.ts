@@ -53,27 +53,28 @@ export class ShippoBatches extends ShippoService {
 
   _update(id: ID, data: Data, params: Params) {
     return this.schedule('create', () => {
-      return this.shippo.post(
-        `batches/${id}/add_shipments`,
-        data,
-        axiosOpts(params)
-      );
+      return this.shippo
+        .post(`batches/${id}/add_shipments`, data, axiosOpts(params))
+        .then(this.handleResult)
+        .catch(this.handleError);
     });
   }
 
   _patch(id: ID, data: Data, params: Params) {
     return this.schedule('create', () => {
-      return this.shippo.post(
-        `batches/${id}/remove_shipments`,
-        data,
-        axiosOpts(params)
-      );
+      return this.shippo
+        .post(`batches/${id}/remove_shipments`, data, axiosOpts(params))
+        .then(this.handleResult)
+        .catch(this.handleError);
     });
   }
 
   _remove(id: ID, params: Params) {
     return this.schedule('create', () => {
-      return this.shippo.post(`batches/${id}/purchase`, axiosOpts(params));
+      return this.shippo
+        .post(`batches/${id}/purchase`, axiosOpts(params))
+        .then(this.handleResult)
+        .catch(this.handleError);
     });
   }
 }

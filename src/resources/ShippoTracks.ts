@@ -63,6 +63,9 @@ export class ShippoTracks extends ShippoService {
     const shippoParams = { ...params, query: { ...params.query } } as any;
     const carrier = shippoParams.query.carrier;
     delete shippoParams.query.carrier;
-    return this.resource.get(`${carrier}/${id}`, shippoParams);
+    return this.resource
+      .get(`${carrier}/${id}`, shippoParams)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 }

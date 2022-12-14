@@ -2,7 +2,11 @@
   "name": "feathers-shippo",
   "version": "0.0.1",
   "description": "A Feathers JS adapter for the Shippo API",
-  "keywords": ["Feathers", "FeathersJS", "Shippo"],
+  "keywords": [
+    "Feathers",
+    "FeathersJS",
+    "Shippo"
+  ],
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "dist/index.d.ts",

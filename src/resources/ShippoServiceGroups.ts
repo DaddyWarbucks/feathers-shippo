@@ -26,7 +26,10 @@ export class ShippoServiceGroups extends ShippoService {
         ...data,
         object_id: id
       };
-      return this.shippo.put('service-groups', data, axiosOpts(params));
+      return this.shippo
+        .put('service-groups', data, axiosOpts(params))
+        .then(this.handleResult)
+        .catch(this.handleError);
     });
   }
 }

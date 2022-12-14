@@ -8,11 +8,11 @@ const SHIPPO_API_URL = 'https://api.goshippo.com';
 export type App = Application;
 
 export interface Limiters {
-  create: Bottleneck;
-  update: Bottleneck;
-  get: Bottleneck;
-  find: Bottleneck;
-  remove: Bottleneck;
+  create?: Bottleneck;
+  update?: Bottleneck;
+  get?: Bottleneck;
+  find?: Bottleneck;
+  remove?: Bottleneck;
 }
 
 export interface Resource {
@@ -125,12 +125,12 @@ const shippoResource = (service: any): Resource => {
   const { path } = service.options;
   return {
     create: (data: Data, params?: Params) => {
-      return service.schedule('post', () => {
+      return service.schedule('create', async () => {
         return service.shippo.post(path, data, axiosOpts(params));
       });
     },
     update: (id: ID, data: Data, params?: Params) => {
-      return service.schedule('put', () => {
+      return service.schedule('update', () => {
         if (!id) {
           throw new errors.BadRequest('ID is required');
         }
@@ -138,7 +138,7 @@ const shippoResource = (service: any): Resource => {
       });
     },
     get: (id: ID, params?: Params) => {
-      return service.schedule('retrieve', () => {
+      return service.schedule('get', () => {
         if (!id) {
           throw new errors.BadRequest('ID is required');
         }
@@ -146,7 +146,7 @@ const shippoResource = (service: any): Resource => {
       });
     },
     find: (params?: Params) => {
-      return service.schedule('list', () => {
+      return service.schedule('find', async () => {
         return service.shippo.get(path, axiosOpts(params));
       });
     },
@@ -161,7 +161,10 @@ const shippoResource = (service: any): Resource => {
 export const shippo = (token: string) => {
   return axios.create({
     baseURL: SHIPPO_API_URL,
-    headers: { Authorization: `ShippoToken ${token}` }
+    headers: {
+      Authorization: `ShippoToken ${token}`,
+      'Accept-Encoding': null
+    }
   });
 };
 
@@ -216,20 +219,30 @@ export class ShippoService {
     }
   }
 
+  handleResult(result: any, params?: Params) {
+    if (params) {
+      params.shippoResult = result;
+    }
+    return result.data;
+  }
+
   schedule(
-    method: 'create' | 'update' | 'get' | 'find',
+    method: 'create' | 'update' | 'get' | 'find' | 'remove',
     fn: () => Promise<any>
   ) {
     const { limiters } = this.options;
     if (limiters && limiters[method]) {
-      return limiters[method].schedule(fn);
+      return (limiters[method] as any).schedule(fn);
     }
     return fn();
   }
 
   async _create(data: Data, params?: Params): Promise<Result> {
     this.handleMethod('create');
-    return this.resource.create(data, params).catch(this.handleError);
+    return this.resource
+      .create(data, params)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 
   async create(data: Data, params?: Params): Promise<Result> {
@@ -238,7 +251,10 @@ export class ShippoService {
 
   async _get(id: ID, params?: Params): Promise<Result> {
     this.handleMethod('get');
-    return this.resource.get(id, params).catch(this.handleError);
+    return this.resource
+      .get(id, params)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 
   async get(id: ID, params?: Params): Promise<Result> {
@@ -247,8 +263,9 @@ export class ShippoService {
 
   async _find(params?: Params): Promise<PaginatedResult> {
     this.handleMethod('find');
-    const { data: result } = await this.resource
+    const result = await this.resource
       .find(params)
+      .then(this.handleResult)
       .catch(this.handleError);
     result.data = result.results;
     delete result.results;
@@ -261,7 +278,10 @@ export class ShippoService {
 
   async _update(id: ID, data: Data, params?: Params): Promise<Result> {
     this.handleMethod('update');
-    return this.resource.update(id, data, params).catch(this.handleError);
+    return this.resource
+      .update(id, data, params)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 
   async update(id: ID, data: Data, params?: Params): Promise<Result> {
@@ -270,7 +290,9 @@ export class ShippoService {
 
   async _patch(id: ID, data: Data, params?: Params): Promise<Result> {
     this.handleMethod('patch');
-    return this._update(id, data, params);
+    return this._update(id, data, params)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 
   async patch(id: ID, data: Data, params?: Params): Promise<Result> {
@@ -279,7 +301,10 @@ export class ShippoService {
 
   async _remove(id: ID, params?: Params): Promise<Result> {
     this.handleMethod('remove');
-    return this.resource.remove(id, params).catch(this.handleError);
+    return this.resource
+      .remove(id, params)
+      .then(this.handleResult)
+      .catch(this.handleError);
   }
 
   async remove(id: ID, params?: Params): Promise<Result> {

@@ -28,7 +28,10 @@ export class ShippoAddresses extends ShippoService {
     if (params?.query?.validate) {
       const shippoParams = { ...params, query: { ...params.query } } as any;
       delete shippoParams.query.validate;
-      return this.resource.get(`${id}/validate`, shippoParams);
+      return this.resource
+        .get(`${id}/validate`, shippoParams)
+        .then(this.handleResult)
+        .catch(this.handleError);
     }
     return super._get(id, params);
   }
