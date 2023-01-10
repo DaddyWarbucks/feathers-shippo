@@ -55,7 +55,7 @@ export interface Params {
 }
 
 export interface PaginatedResult {
-  count: `${number}`;
+  total: number;
   next: string | null;
   previous: string | null;
   data: [];
@@ -87,6 +87,7 @@ const testMinTimes = {
 export const shippoLimiter = (method: ServiceMethod, minTimes: any) => {
   const limiter = new Bottleneck({ minTime: (minTimes as any)[method] });
 
+  // TODO: Inspect the error for a timeoute/expiry to retry after
   limiter.on('failed', async (error, jobInfo) => {
     if (error.code === 429 && jobInfo.retryCount === 0) {
       // Retry once after 200ms
@@ -223,6 +224,14 @@ export class ShippoService {
     if (params) {
       params.shippoResult = result;
     }
+    if (result.data.results) {
+      result.data.data = result.data.results;
+      delete result.data.results;
+    }
+    if (result.data.count) {
+      result.data.total = result.data.count;
+      delete result.data.count;
+    }
     return result.data;
   }
 
@@ -263,13 +272,10 @@ export class ShippoService {
 
   async _find(params?: Params): Promise<PaginatedResult> {
     this.handleMethod('find');
-    const result = await this.resource
+    return this.resource
       .find(params)
       .then(this.handleResult)
       .catch(this.handleError);
-    result.data = result.results;
-    delete result.results;
-    return result;
   }
 
   async find(params?: Params): Promise<PaginatedResult> {

@@ -46,7 +46,7 @@ export class ShippoBatches extends ShippoService {
       limiters: shippoLimiters(options.token),
       ...options,
       path: 'batches',
-      methods: ['get', 'create', 'update', 'patch', 'remove']
+      methods: ['get', 'create']
     };
     super(options, app);
   }
